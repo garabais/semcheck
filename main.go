@@ -14,19 +14,18 @@ func main() {
 	word := os.Args[1]
 
 	// Generate grammatic
-	gramatic, err := newSemChecker()
+	semChecker, err := newSemChecker()
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// Use CYK to check if the word matches
-	matches := gramatic.match(word)
+	valid := semChecker.check(word)
 
-	if matches {
-		fmt.Printf("The word \x1b[1;31m%s\x1b[0m is accepted by the grammatic\n", word)
+	if valid {
+		fmt.Printf("\x1b[1;32m%s is a valid grammatic\x1b[0m\n", word)
 	} else {
-		fmt.Printf("The word \x1b[1;31m%s\x1b[0m isn't accepted by the grammatic\n", word)
-		os.Exit(1)
+		fmt.Printf("\x1b[1;31m%s is an invalid grammatic\x1b[0m\n", word)
 	}
 
 }

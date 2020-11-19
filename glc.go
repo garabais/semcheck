@@ -27,7 +27,7 @@ func (g *glc) String() string {
 	return s
 }
 
-func (g *glc) match(word string) bool {
+func (g *glc) check(word string) bool {
 
 	// Matrix of sets of symbols
 	mat := make([][]map[*simbol]struct{}, len(word))

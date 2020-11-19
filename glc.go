@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-
-	"github.com/awalterschulze/gographviz"
 )
 
 type glc struct {
@@ -251,13 +249,9 @@ func (g *glc) normalize() {
 	g.chomsky = true
 }
 
-func (g *glc) match(word string) (bool, *gographviz.Graph) {
+func (g *glc) match(word string) bool {
 	if !g.chomsky {
 		g.normalize()
-	}
-	// Special case, useless start symbol
-	if g.start == nil {
-		return false, nil
 	}
 
 	// Matrix of sets of symbols
@@ -314,86 +308,8 @@ func (g *glc) match(word string) (bool, *gographviz.Graph) {
 
 	// Check if s is the final part of the matrix
 	if _, ok := mat[0][len(mat)-1][g.start]; !ok {
-		return false, nil
-	}
-	// Erase the other simbols and just keep the start simbol
-	mat[0][len(mat)-1] = map[*simbol]struct{}{
-		g.start: {},
+		return false
 	}
 
-	// Create a graph
-	graph := gographviz.NewGraph()
-	if err := graph.SetName("G"); err != nil {
-		panic(err)
-	}
-	if err := graph.SetDir(true); err != nil {
-		panic(err)
-	}
-	graph.AddAttr("G", "label", fmt.Sprintf("\"%s\"", word))
-	graph.AddAttr("G", "labelloc", "t")
-	graph.AddAttr("G", "fontsize", "20")
-
-	// Add starting node
-	if err := graph.AddNode("G", fmt.Sprintf("q0%d", len(mat)-1), map[string]string{"label": fmt.Sprintf("\"%s\"", g.start.displayName)}); err != nil {
-		panic(err)
-	}
-
-	backTrack(word, graph, mat, 0, len(mat)-1)
-
-	return true, graph
-}
-
-func backTrack(word string, graph *gographviz.Graph, mat [][]map[*simbol]struct{}, targetI, targetJ int) {
-	// If the position is in the diagonal add the leave of the graph
-	if targetI == targetJ {
-		// Create leave node
-		if err := graph.AddNode("G", fmt.Sprintf("f%d", targetI), map[string]string{"label": fmt.Sprintf("\"%s\"", string(word[targetI])), "shape": "doublecircle"}); err != nil {
-			panic(err)
-		}
-		// Connect with parent
-		if err := graph.AddEdge(fmt.Sprintf("q%d%d", targetI, targetJ), fmt.Sprintf("f%d", targetI), true, nil); err != nil {
-			panic(err)
-		}
-		return
-	}
-
-	// Search for the origin of the simbols in mat[targetI][targetJ]
-	for i, j := targetI+1, targetI; j < targetJ && i <= targetJ; i, j = i+1, j+1 {
-		for sim := range mat[targetI][targetJ] {
-			for _, prod := range sim.productions {
-				if len(prod.elements) == 2 {
-					for s1 := range mat[targetI][j] {
-						for s2 := range mat[i][targetJ] {
-							c1 := prod.elements[0].(*simbol)
-							c2 := prod.elements[1].(*simbol)
-
-							if c1 == s1 && c2 == s2 {
-								// When found, add the 2 children
-								if err := graph.AddNode("G", fmt.Sprintf("q%d%d", targetI, j), map[string]string{"label": fmt.Sprintf("\"%s\"", s1.displayName)}); err != nil {
-									panic(err)
-								}
-								if err := graph.AddNode("G", fmt.Sprintf("q%d%d", i, targetJ), map[string]string{"label": fmt.Sprintf("\"%s\"", s2.displayName)}); err != nil {
-									panic(err)
-								}
-								// Connect the children with the parent(current)
-								if err := graph.AddEdge(fmt.Sprintf("q%d%d", targetI, targetJ), fmt.Sprintf("q%d%d", targetI, j), true, nil); err != nil {
-									panic(err)
-								}
-								if err := graph.AddEdge(fmt.Sprintf("q%d%d", targetI, targetJ), fmt.Sprintf("q%d%d", i, targetJ), true, nil); err != nil {
-									panic(err)
-								}
-								// Call backTrack in each of the clildren
-								backTrack(word, graph, mat, targetI, j)
-								backTrack(word, graph, mat, i, targetJ)
-
-								// And stop search
-								return
-
-							}
-						}
-					}
-				}
-			}
-		}
-	}
+	return true
 }

@@ -19,17 +19,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// Put the grammatic in FNC
-	gramatic.normalize()
-
-	// Save the grammatic
-	fmt.Println("Saving Chomsky grammatic in fnc-")
-	f, err := os.Create("fnc-")
-	if err != nil {
-		log.Println("Failed creating file", err)
-	}
-	fmt.Fprint(f, gramatic)
-
 	// Use CYK to check if the word matches
 	matches := gramatic.match(word)
 

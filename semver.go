@@ -105,5 +105,9 @@ func newSemChecker() (*glc, error) {
 		return nil, err
 	}
 
-	return &glc{simbols: simbols, start: simbols[0]}, nil
+	g := &glc{simbols: simbols, start: simbols[0]}
+
+	g.normalize()
+
+	return g, nil
 }

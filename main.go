@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 )
 
@@ -38,6 +39,20 @@ func main() {
 		if err != nil {
 			log.Fatal("Error runing graphviz", err)
 		}
+
+		var openProg []string
+
+		switch runtime.GOOS {
+		case "darwin":
+			openProg = []string{"open"}
+		case "windows":
+			openProg = []string{"cmd", "/c", "start"}
+		default:
+			openProg = []string{"xdg-open"}
+		}
+
+		cmd = exec.Command(openProg[0], append(openProg[1:], "tree.png")...)
+		cmd.Start()
 	} else {
 		fmt.Printf("\x1b[1;31m%s is an invalid semantic version\x1b[0m\n", word)
 	}
